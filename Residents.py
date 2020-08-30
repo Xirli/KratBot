@@ -3,17 +3,6 @@ from config import RES_FILE
 
 
 class Resident:
-    user_id = None
-    first_name = None
-    username = None
-
-    money = None
-    mana = None
-    max_mana = None
-    regeneration = None
-
-    list_spell = None
-    list_ban = None
 
     def __init__(self, user_id, first_name, username, money=0):
         self.user_id = user_id
@@ -26,6 +15,14 @@ class Resident:
         self.mana = 1
         self.max_mana = 1
         self.regeneration = 1
+
+    @classmethod
+    def generate_resident_xml(cls, xml_element):
+        user_id = int(xml_element.attrib['id'])
+        first_name = xml_element.find("first_name").text
+        username = xml_element.find("username").text
+        money = int(xml_element.find("money").text)
+        return cls(user_id, first_name, username, money)
 
     def generate_xml_element(self):
         resident = ET.Element("resident", id=str(self.user_id))
@@ -78,16 +75,8 @@ def read_xml(input_file=RES_FILE):
     residents_xml = xml.getroot()
     residents = []
     for res in residents_xml:
-        residents.append(generate_resident_xml(res))
+        residents.append(Resident.generate_resident_xml(res))
     return residents
-
-
-def generate_resident_xml(xml_element):
-    user_id = int(xml_element.attrib['id'])
-    first_name = xml_element.find("first_name").text
-    username = xml_element.find("username").text
-    money = int(xml_element.find("money").text)
-    return Resident(user_id, first_name, username, money)
 
 
 def get_resident(user, residents):
