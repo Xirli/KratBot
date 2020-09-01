@@ -1,8 +1,7 @@
-from secret_file import TOKEN
-from secret_file import RES_FILE
+import os
 
-# TOKEN - token for telebot
-# RES_FILE - name of xml file that contains info of residents
+TOKEN = os.getenv('TELEBOT')
+RES_FILE = "output.xml"
 
 TEXT = {}
 TEXT['regist 0'] = "Ты уже являешся жителем Тёмы. Спи спокойно."

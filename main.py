@@ -4,7 +4,6 @@ from Residents import *
 from config import *
 from Actions import *
 
-
 RESIDENTS = read_xml()
 bot = TeleBot(TOKEN)
 
