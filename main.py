@@ -19,21 +19,20 @@ def regist_button(message):
 
 @bot.callback_query_handler(func=lambda call: call.data == "regist")
 def regist_user_call(call):
-    if not user_chek_ban("ban", call.from_user):
+    if get_resident(call.from_user, RESIDENTS) is None:
         regist_user(call.message.chat.id, call.from_user)
+    elif not user_chek_ban("ban", call.from_user):
+        bot.send_message(call.message.chat.id, TEXT['regist 0'])
 
 
 def regist_user(chat, user):
     r = new_resident(user, RESIDENTS)
-    if r is None:
-        bot.send_message(chat, TEXT['regist 0'])
-    else:
-        bot.send_message(chat, TEXT['regist 1'])
-        r.money += 102 - len(RESIDENTS)
-        bot.send_message(chat, TEXT['regist 2'])
-        bot.send_message(chat, get_stat([r]))
-        RESIDENTS.append(r)
-        write_xml(RESIDENTS)
+    bot.send_message(chat, TEXT['regist 1'])
+    r.money += 102 - len(RESIDENTS)
+    bot.send_message(chat, TEXT['regist 2'])
+    bot.send_message(chat, get_stat([r]))
+    RESIDENTS.append(r)
+    write_xml(RESIDENTS)
 
 
 @bot.message_handler(commands=['pay'])

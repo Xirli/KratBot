@@ -49,9 +49,7 @@ class Resident:
 
 
 def new_resident(user, residents=None):
-    for resident in residents:
-        if user.id == resident.user_id:
-            return None
+    assert (get_resident(user, residents) is None)
     return Resident(user.id, user.first_name, user.username)
 
 
