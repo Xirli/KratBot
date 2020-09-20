@@ -1,8 +1,8 @@
 from telebot import *
 
-from Residents import *
+from resident import *
 from config import *
-from Actions import *
+from action import *
 
 RESIDENTS = read_xml()
 bot = TeleBot(TOKEN)
@@ -106,11 +106,12 @@ def start(message):
         bot.send_message(message.chat.id, TEXT['fire 5'])
         return
 
-    # write_xml(RESIDENTS)
     attacker.money -= 1
     action = Action("ban", 15)
     victim.list_ban.append(action)
-    bot.send_message(message.chat.id, "Время действия: 30 сек")
+    bot.send_message(message.chat.id, "Время действия: 30 сек, цена атаки 1 тёмкоин")
+    write_xml(RESIDENTS)
+
 
 
 @bot.message_handler(commands=['stat_all'])
@@ -121,7 +122,7 @@ def start(message):
 
 @bot.message_handler(commands=['stat'])
 def start(message):
-    if user_chek_ban(message):
+    if user_chek_ban("ban", message.from_user):
         bot.send_message(message.chat.id, get_resident(message.from_user, RESIDENTS).first_name + " is banned")
     bot.send_message(message.chat.id, get_stat([get_resident(message.from_user, RESIDENTS)]))
 
