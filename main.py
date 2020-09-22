@@ -1,3 +1,5 @@
+from random import random, randint
+
 from telebot import *
 
 from resident import *
@@ -33,6 +35,12 @@ def regist_user(chat, user):
     bot.send_message(chat, get_stat([r]))
     RESIDENTS.append(r)
     write_xml(RESIDENTS)
+
+
+@bot.message_handler(commands=['help'])
+def start(message):
+    user_is_ban(message)
+    bot.send_message(message.chat.id, TEXT['help'])
 
 
 @bot.message_handler(commands=['pay'])
@@ -114,13 +122,13 @@ def start(message):
 
 
 
-@bot.message_handler(commands=['stat_all'])
+@bot.message_handler(commands=['top'])
 def start(message):
     user_is_ban(message)
     bot.send_message(message.chat.id, get_stat(RESIDENTS))
 
 
-@bot.message_handler(commands=['stat'])
+@bot.message_handler(commands=['me'])
 def start(message):
     if user_chek_ban("ban", message.from_user):
         bot.send_message(message.chat.id, get_resident(message.from_user, RESIDENTS).first_name + " is banned")
@@ -131,7 +139,7 @@ def get_stat(residents):
     stat = ""
     for res in residents:
         if res is None:
-            return TEXT['get_stat']
+            return TEXT['top']
         stat += res.first_name + ': '
         stat += str(res.money)
         stat += " тёмкоин\n" if (res.money % 10 == 1) else " тёмкоина\n" if (
@@ -142,6 +150,11 @@ def get_stat(residents):
 @bot.message_handler(content_types=['text'])
 def reg(message):
     user_is_ban(message)
+    if 0 > random():
+        user = get_resident(message.from_user, RESIDENTS)
+        #user.money += 10
+        write_xml(RESIDENTS)
+        bot.send_message(message.chat.id, "Я банкрот!")
 
 
 def user_is_ban(message):
