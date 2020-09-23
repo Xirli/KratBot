@@ -2,6 +2,7 @@ from random import random, randint
 
 from telebot import *
 
+from collector import send_message
 from resident import *
 from config import *
 from action import *
@@ -16,31 +17,29 @@ def regist_button(message):
     keyboard = types.InlineKeyboardMarkup()
     url_button = types.InlineKeyboardButton(text="Получить паспорт", callback_data="regist")
     keyboard.add(url_button)
-    bot.send_message(message.chat.id, "Тебя мне очень не хватает!", reply_markup=keyboard)
+    send_message(bot, message.chat.id, "Тебя мне очень не хватает!", keyboard)
 
 
 @bot.callback_query_handler(func=lambda call: call.data == "regist")
 def regist_user_call(call):
     if get_resident(call.from_user, RESIDENTS) is None:
         regist_user(call.message.chat.id, call.from_user)
-    elif not user_chek_ban("ban", call.from_user):
-        bot.send_message(call.message.chat.id, TEXT['regist 0'])
+    # elif not user_chek_ban("ban", call.from_user):
+    #    send_message(bot, call.message.chat.id, TEXT['regist 0'])
 
 
 def regist_user(chat, user):
     r = new_resident(user, RESIDENTS)
-    bot.send_message(chat, TEXT['regist 1'])
     r.money += 102 - len(RESIDENTS)
-    bot.send_message(chat, TEXT['regist 2'])
-    bot.send_message(chat, get_stat([r]))
     RESIDENTS.append(r)
     write_xml(RESIDENTS)
+    send_message(bot, chat, TEXT['regist 1'] + "\n" + get_stat([r]))
 
 
 @bot.message_handler(commands=['help'])
 def start(message):
     user_is_ban(message)
-    bot.send_message(message.chat.id, TEXT['help'])
+    send_message(bot, message.chat.id, TEXT['help'])
 
 
 @bot.message_handler(commands=['pay'])
@@ -48,45 +47,46 @@ def start(message):
     user_is_ban(message)
 
     if message.reply_to_message is None:
-        bot.send_message(message.chat.id, TEXT['pay 1'])
+        send_message(bot, message.chat.id, TEXT['pay 1'])
         return
     if len(message.text) < 5:
-        bot.send_message(message.chat.id, TEXT['pay 2'])
+        send_message(bot, message.chat.id, TEXT['pay 2'])
         return
 
     try:
         money = int(message.text[5:])
     except ValueError:
-        bot.send_message(message.chat.id, TEXT['pay 3'])
+        send_message(bot, message.chat.id, TEXT['pay 3'])
         return
 
     if money < 0:
-        bot.send_message(message.chat.id, TEXT['pay 4'])
+        send_message(bot, message.chat.id, TEXT['pay 4'])
         return
 
     sender = get_resident(message.from_user, RESIDENTS)
     receiver = get_resident(message.reply_to_message.from_user, RESIDENTS)
 
     if sender is None:
-        bot.send_message(message.chat.id, TEXT['pay 5'])
+        send_message(bot, message.chat.id, TEXT['pay 5'])
         regist_button(message)
         return
     if receiver is None:
-        bot.send_message(message.chat.id, TEXT['pay 6'])
+        send_message(bot, message.chat.id, TEXT['pay 6'])
+        bot.send_message(message.chat.id, "/start")  # костыль
         regist_button(message)
         return
     if receiver == sender:
-        bot.send_message(message.chat.id, TEXT['pay 7'])
+        send_message(bot, message.chat.id, TEXT['pay 7'])
         return
     if sender.money - money < 0:
-        bot.send_message(message.chat.id, TEXT['pay 8'])
+        send_message(bot, message.chat.id, TEXT['pay 8'])
         return
 
     sender.money -= money
     receiver.money += money
     write_xml(RESIDENTS)
 
-    bot.send_message(message.chat.id, get_stat([sender, receiver]))
+    send_message(bot, message.chat.id, get_stat([sender, receiver]))
 
 
 @bot.message_handler(commands=['fire'])
@@ -94,45 +94,45 @@ def start(message):
     user_is_ban(message)
 
     if message.reply_to_message is None:
-        bot.send_message(message.chat.id, TEXT['fire 1'])
+        send_message(bot, message.chat.id, TEXT['fire 1'])
         return
 
     attacker = get_resident(message.from_user, RESIDENTS)
     victim = get_resident(message.reply_to_message.from_user, RESIDENTS)
 
     if attacker is None:
-        bot.send_message(message.chat.id, TEXT['fire 2'])
+        send_message(bot, message.chat.id, TEXT['fire 2'])
         regist_button(message)
         return
     if victim is None:
-        bot.send_message(message.chat.id, TEXT['fire 3'])
+        send_message(bot, message.chat.id, TEXT['fire 3'])
+        bot.send_message(message.chat.id, "/start")  # костыль
         regist_button(message)
         return
     if attacker == victim:
-        bot.send_message(message.chat.id, TEXT['fire 4'])
+        send_message(bot, message.chat.id, TEXT['fire 4'])
     if attacker.money < 1:
-        bot.send_message(message.chat.id, TEXT['fire 5'])
+        send_message(bot, message.chat.id, TEXT['fire 5'])
         return
 
     attacker.money -= 1
     action = Action("ban", 15)
     victim.list_ban.append(action)
-    bot.send_message(message.chat.id, "Время действия: 30 сек, цена атаки 1 тёмкоин")
+    send_message(bot, message.chat.id, "Время действия: 30 сек, цена атаки 1 тёмкоин")
     write_xml(RESIDENTS)
-
 
 
 @bot.message_handler(commands=['top'])
 def start(message):
     user_is_ban(message)
-    bot.send_message(message.chat.id, get_stat(RESIDENTS))
+    send_message(bot, message.chat.id, get_stat(RESIDENTS))
 
 
 @bot.message_handler(commands=['me'])
 def start(message):
     if user_chek_ban("ban", message.from_user):
-        bot.send_message(message.chat.id, get_resident(message.from_user, RESIDENTS).first_name + " is banned")
-    bot.send_message(message.chat.id, get_stat([get_resident(message.from_user, RESIDENTS)]))
+        send_message(bot, message.chat.id, get_resident(message.from_user, RESIDENTS).first_name + " is banned")
+    send_message(bot, message.chat.id, get_stat([get_resident(message.from_user, RESIDENTS)]))
 
 
 def get_stat(residents):
@@ -152,9 +152,9 @@ def reg(message):
     user_is_ban(message)
     if 0 > random():
         user = get_resident(message.from_user, RESIDENTS)
-        #user.money += 10
+        # user.money += 10
         write_xml(RESIDENTS)
-        bot.send_message(message.chat.id, "Я банкрот!")
+        send_message(bot, message.chat.id, "Я банкрот!")
 
 
 def user_is_ban(message):
